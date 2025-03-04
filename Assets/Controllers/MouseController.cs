@@ -5,7 +5,6 @@ using UnityEngine;
 public class MouseController : MonoBehaviour
 {
     public GameObject normalTileOverlay;
-    public GameObject DragParent;
 
     Vector3 previousFramePosition;
 
@@ -13,12 +12,12 @@ public class MouseController : MonoBehaviour
 
     Vector3 currentFramePos;
 
-    List<GameObject> dragTilePreview;
+    List<GameObject> tileOverlayTemp = new List<GameObject>();
 
     // Start is called before the first frame update
     void Start()
     {
-        dragTilePreview = new List<GameObject>();
+
     }
 
     // Update is called once per frame
@@ -37,20 +36,20 @@ public class MouseController : MonoBehaviour
 
     void SelectTile()
     {
-        Tile currentTile = WorldController.Instance.GetTileAtWorldCoord(currentFramePos);
+        //Tile currentTile = WorldController.Instance.GetTileAtWorldCoord(currentFramePos);
 
-        if(Input.GetMouseButtonUp(0))
-        {
-            if (currentTile != null)
-            {
-                normalTileOverlay.SetActive(true);
-                normalTileOverlay.transform.position = new Vector3(currentTile.x, currentTile.y, -1);
-            }
-            else
-            {
-                normalTileOverlay.SetActive(false);
-            }
-        }
+        //if(Input.GetMouseButtonUp(0))
+        //{
+        //    if (currentTile != null)
+        //    {
+        //        normalTileOverlay.SetActive(true);
+        //        normalTileOverlay.transform.position = new Vector3(currentTile.x, currentTile.y, -1);
+        //    }
+        //    else
+        //    {
+        //        normalTileOverlay.SetActive(false);
+        //    }
+        //}
     }
 
     void DragCamera()
@@ -64,6 +63,7 @@ public class MouseController : MonoBehaviour
 
     void DragTiles()
     {   
+
         // Start Dragging
         if (Input.GetMouseButtonDown(0))
         {
@@ -90,12 +90,13 @@ public class MouseController : MonoBehaviour
             dragStartY = tmp;
         }
 
-        while(dragTilePreview.Count > 0)
+        while (tileOverlayTemp.Count > 0)
         {
-            GameObject go = dragTilePreview[0];
-            dragTilePreview.RemoveAt(0);
-            Destroy(go);
+            GameObject go = tileOverlayTemp[0];
+            tileOverlayTemp.RemoveAt(0);
+            PoolManager.ReturnToPool(go);
         }
+
 
         if (Input.GetMouseButton(0))
         {
@@ -107,18 +108,26 @@ public class MouseController : MonoBehaviour
                     if (tile != null)
                     {
                         // Display the overlay of dragged tiles.
-                        GameObject go = (GameObject)Instantiate(normalTileOverlay, new Vector3(x, y, -1), Quaternion.identity);
+                        /*GameObject go = (GameObject)Instantiate(normalTileOverlay, new Vector3(x, y, -1), Quaternion.identity);
                         go.transform.SetParent(DragParent.transform, true);
-                        dragTilePreview.Add(go);
+                        dragTilePreview.Add(go);*/
+
+                        GameObject overlay = PoolManager.SpawnObject(normalTileOverlay, new Vector3(x, y, -1), Quaternion.identity, PoolManager.PoolType.TileDragOverlay);
+                        tileOverlayTemp.Add(overlay);
                     }
                 }
             }
         }
+        
 
         // End Dragging
         if (Input.GetMouseButtonUp(0))
         {
-            
+            while(tileOverlayTemp.Count > 0)
+            {
+                PoolManager.ReturnToPool(tileOverlayTemp[0]);
+                tileOverlayTemp.RemoveAt(0);
+            }
         }
     }
 }

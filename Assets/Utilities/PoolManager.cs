@@ -12,6 +12,7 @@ public class PoolManager : MonoBehaviour
     public enum PoolType
     {
         TileDragOverlay,
+        Tile
     }
 
     public void Start()

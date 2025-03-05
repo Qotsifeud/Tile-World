@@ -28,7 +28,7 @@ public class MouseController : MonoBehaviour
 
         SelectTile();
         DragTiles();
-        DragCamera();
+        UpdateCamera();
 
         previousFramePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         previousFramePosition.z = 0;
@@ -52,13 +52,15 @@ public class MouseController : MonoBehaviour
         //}
     }
 
-    void DragCamera()
+    void UpdateCamera()
     {
         if (Input.GetMouseButton(1) || Input.GetMouseButton(2))
         {
             Vector3 diff = previousFramePosition - currentFramePos;
             Camera.main.transform.Translate(diff);
         }
+
+        Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize -= Input.mouseScrollDelta.y, 2f, 20f);
     }
 
     void DragTiles()
@@ -92,9 +94,8 @@ public class MouseController : MonoBehaviour
 
         while (tileOverlayTemp.Count > 0)
         {
-            GameObject go = tileOverlayTemp[0];
+            PoolManager.ReturnToPool(tileOverlayTemp[0]);
             tileOverlayTemp.RemoveAt(0);
-            PoolManager.ReturnToPool(go);
         }
 
 
@@ -123,7 +124,7 @@ public class MouseController : MonoBehaviour
         // End Dragging
         if (Input.GetMouseButtonUp(0))
         {
-            while(tileOverlayTemp.Count > 0)
+            while (tileOverlayTemp.Count > 0)
             {
                 PoolManager.ReturnToPool(tileOverlayTemp[0]);
                 tileOverlayTemp.RemoveAt(0);

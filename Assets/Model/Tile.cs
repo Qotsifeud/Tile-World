@@ -8,6 +8,7 @@ public class Tile
     public enum TileType
     {
         Dirt,
+        Grass,
         Stone,
         Empty,
         Floor
@@ -35,12 +36,14 @@ public class Tile
     WorldMap world;
     public int x { get; set; }
     public int y { get; set; }
+    public int z { get; set; }
 
-    public Tile(WorldMap world, int x, int y)
+    public Tile(WorldMap world, int x, int y, int z)
     {
         this.world = world;
         this.x = x;
         this.y = y;
+        this.z = z;
     }
 
     public void TileTypeChangedCallback (Action<Tile> callback)

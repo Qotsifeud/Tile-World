@@ -56,11 +56,21 @@ public class MouseController : MonoBehaviour
     {
         if (Input.GetMouseButton(1) || Input.GetMouseButton(2))
         {
-            Vector3 diff = previousFramePosition - currentFramePos;
-            Camera.main.transform.Translate(diff);
+            Vector3 diff = previousFramePosition - currentFramePos; // Original direction
+            float speed = 1.0f; // Adjust this value to change the speed
+            Camera.main.transform.Translate(diff * speed, Space.World);
         }
 
-        Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize -= Input.mouseScrollDelta.y, 2f, 20f);
+        float mouseWheelDirection = Input.GetAxis("Mouse ScrollWheel");
+
+        if (Input.GetKey(KeyCode.LeftControl) && mouseWheelDirection > 0f || Input.GetKey(KeyCode.LeftControl) && mouseWheelDirection < 0f)
+        {
+            Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize - Input.mouseScrollDelta.y, 2f, 20f);
+        }
+        else if( mouseWheelDirection > 0f || mouseWheelDirection < 0f)
+        {
+            WorldController.Instance.ChangeZLayer(mouseWheelDirection);
+        }
     }
 
     void DragTiles()
@@ -113,7 +123,7 @@ public class MouseController : MonoBehaviour
                         go.transform.SetParent(DragParent.transform, true);
                         dragTilePreview.Add(go);*/
 
-                        GameObject overlay = PoolManager.SpawnObject(normalTileOverlay, new Vector3(x, y, -1), Quaternion.identity, PoolManager.PoolType.TileDragOverlay);
+                        GameObject overlay = PoolManager.SpawnObject(normalTileOverlay, new Vector3(x, y, 0.5f), Quaternion.identity, PoolManager.PoolType.TileDragOverlay);
                         tileOverlayTemp.Add(overlay);
                     }
                 }

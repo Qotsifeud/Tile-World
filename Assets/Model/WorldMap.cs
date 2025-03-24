@@ -9,7 +9,7 @@ public class WorldMap
     public int worldHeight { get; private set; }
     public int worldZLevels { get; private set; }
 
-    public WorldMap(int width = 100, int height = 100, int zLevels = 2)
+    public WorldMap(int width = 100, int height = 100, int zLevels = 4)
     {
         this.worldWidth = width;
         this.worldHeight = height;
@@ -30,7 +30,7 @@ public class WorldMap
             }
         }
 
-        Debug.Log("World created with " + (worldWidth *  worldHeight) + " tiles.");
+        Debug.Log("World created with " + (worldWidth *  worldHeight * worldZLevels) + " tiles.");
     }
     
     public void RandomizeTiles(float noiseScale, float dirtThreshold)
@@ -62,28 +62,77 @@ public class WorldMap
         }
     }
 
-    public void RandomizeTrees(float noiseScale, float treeThreshold)
+    public void RandomizeTrees(float noiseScale, float treeThreshold, int treeProximity)
     {
-        int z = 0;
+        int layer = 0;
 
         for (int x = 0; x < worldWidth; x++)
         {
             for (int y = 0; y < worldHeight; y++)
             {
-                if (tiles[x, y, z].Type == Tile.TileType.Dirt) { return; }
-
-                float noiseValue = Mathf.PerlinNoise(x * noiseScale, y * noiseScale);
-
-                if (noiseValue < treeThreshold)
+                switch (tiles[x, y, layer].Type)
                 {
-                    tiles[x, y, z].Type = Tile.TileType.Grass;
-                }
-                else
-                {
-                    tiles[x, y, z].Type = Tile.TileType.Dirt;
+                    case Tile.TileType.Dirt:
+                        continue;
+                    case Tile.TileType.Grass:
+
+                        List<Tile> proxTiles = GetTilesInProximity(x, y, layer, treeProximity);
+
+                        bool hasTreeInProximity = false;
+                        foreach (Tile tile in proxTiles)
+                        {
+                            if (tile.Type == Tile.TileType.Tree)
+                            {
+                                hasTreeInProximity = true;
+                                break;
+                            }
+                        }
+
+                        if (hasTreeInProximity)
+                        {
+                            continue; // Skip to the next tile
+                        }
+
+                        float noiseValue = Mathf.PerlinNoise(x * noiseScale, y * noiseScale);
+
+                        if (noiseValue < treeThreshold)
+                        {
+                            tiles[x, y, layer].Type = Tile.TileType.Tree;
+                        }
+
+                        break;
                 }
             }
         }
+
+        int treeCount = 0;
+
+        for (int z = 0; z < worldZLevels; z++)
+        {
+            for (int x = 0; x < worldWidth; x++)
+            {
+                for (int y = 0; y < worldHeight; y++)
+                {
+                    Tile tile = GetTile(x, y, z);
+
+                    if (tile.Type == Tile.TileType.Tree)
+                    {
+                        for (int tH = 0; tH < 3; tH++) // th = tree height
+                        {
+                            if (z + tH >= worldZLevels) { break; } // Ensure we don't go out of bounds
+
+                            tile = GetTile(x, y, z + tH);
+
+                            tile.Type = Tile.TileType.Tree;
+
+                            treeCount += 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        Debug.Log("There are " + treeCount + " trees");
     }
 
     public Tile GetTile(int x, int y)
@@ -104,6 +153,27 @@ public class WorldMap
         }
 
         return tiles[x, y, z];
+    }
+
+    public List<Tile> GetTilesInProximity(int x, int y, int z, int proximity)
+    {
+        List<Tile> tilesInProximity = new List<Tile>();
+
+        for (int dx = -proximity; dx <= proximity; dx++)
+        {
+            for (int dy = -proximity; dy <= proximity; dy++)
+            {
+                int nx = x + dx;
+                int ny = y + dy;
+
+                if (nx >= 0 && nx < worldWidth && ny >= 0 && ny < worldHeight)
+                {
+                    tilesInProximity.Add(GetTile(nx, ny, z));
+                }
+            }
+        }
+
+        return tilesInProximity;
     }
 
 }

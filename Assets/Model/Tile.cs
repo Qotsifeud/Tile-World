@@ -9,6 +9,7 @@ public class Tile
     {
         Dirt,
         Grass,
+        Tree,
         Stone,
         Empty,
         Floor

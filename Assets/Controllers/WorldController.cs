@@ -25,9 +25,11 @@ public class WorldController : MonoBehaviour
         get; protected set;
     }
 
-    [Header("Noise Adjustments")]
+    [Header("World Gen Adjustments")]
     public float noiseScale;
     public float dirtThreshold;
+    public float treeThreshold;
+    public int treeProximity;
 
     [Header("Testing Sprites")]
     public Sprite air;
@@ -48,9 +50,13 @@ public class WorldController : MonoBehaviour
     public Sprite leftBottomCornerCrass;
     public Sprite rightBottomCornerCrass;
 
+    [Header("Plant Sprites")]
+    public Sprite oakTreeLog;
+
     public WorldMap World { get; protected set; }
 
     public GameObject[] layers;
+    public GameObject[,,] tileObjects;
 
     public int currentZLevel = 0;
 
@@ -62,6 +68,7 @@ public class WorldController : MonoBehaviour
         World = new WorldMap();
 
         layers = new GameObject[World.worldZLevels];
+        tileObjects = new GameObject[World.worldWidth, World.worldHeight, World.worldZLevels];
 
         // Creating a GameObject for each of our tiles.
 
@@ -88,12 +95,15 @@ public class WorldController : MonoBehaviour
 
                     tileObject.gameObject.AddComponent<SpriteRenderer>();
 
+                    tileObjects[x, y, z] = tileObject;
+
                     tileData.TileTypeChangedCallback((tile) => { OnTileChange(tileData, tileObject); });
                 }
             }
         }
 
         World.RandomizeTiles(noiseScale, dirtThreshold);
+        World.RandomizeTrees(noiseScale, treeThreshold, treeProximity);
 
 
         for (int z = 0; z < World.worldZLevels; z++)
@@ -104,18 +114,24 @@ public class WorldController : MonoBehaviour
                 {
                     Tile tileData = World.GetTile(x, y, z);
 
-                    GameObject tileObject = GameObject.Find("Tile_" + x + "_" + y + "_" + z);
+                    GameObject tileObject = tileObjects[x, y, z];
 
                     OnTileChange(tileData, tileObject);
                 }
             }
         }
 
-        for (int i = 0; i < layers.Length; i++)
+        for (int z = 0; z < layers.Length; z++)
         {
-            if (i > 0)
+            if (z < 0 || z > 0)
             {
-                layers[i].SetActive(false);
+                for (int y = 0; y < World.worldWidth; y++)
+                {
+                    for (int x = 0; x < World.worldHeight; x++)
+                    {
+                        tileObjects[x, y, z].GetComponent<SpriteRenderer>().enabled = false;
+                    }
+                }
             }
         }
     }
@@ -133,7 +149,7 @@ public class WorldController : MonoBehaviour
         switch (tileData.Type)
         {
             case Tile.TileType.Empty:
-                spriteRenderer.sprite = air;
+                spriteRenderer.sprite = null;
                 return;
 
             case Tile.TileType.Dirt:
@@ -247,6 +263,8 @@ public class WorldController : MonoBehaviour
                     return;
                 }
 
+            case Tile.TileType.Tree:
+                spriteRenderer.sprite = oakTreeLog;
                 return;
         }
     }
@@ -263,6 +281,9 @@ public class WorldController : MonoBehaviour
     {
         int previousZLevel = currentZLevel;
 
+        SpriteRenderer sprite;
+        Color color;
+
         if (direction > 0f)
         {
             currentZLevel -= 1;
@@ -274,16 +295,118 @@ public class WorldController : MonoBehaviour
             Debug.Log("current z level is " + currentZLevel);
         }
 
-        for (int layer = 0;  layer < layers.Length; layer++)
+
+        for (int layer = 0; layer <= layers.Length - 1; layer++)
         {
             if (layer == currentZLevel)
             {
                 layers[layer].SetActive(true);
+
+                for (int y = 0; y < World.worldWidth; y++)
+                {
+                    for (int x = 0; x < World.worldHeight; x++)
+                    {
+                        sprite = tileObjects[x, y, layer].GetComponent<SpriteRenderer>();
+                        sprite.enabled = true;
+
+                        color = sprite.color;
+                        color.a = 255f;
+
+                        sprite.color = color;
+
+                    }
+                }
+
             }
-            else
+            else if (layer > currentZLevel)
             {
-                layers[layer].SetActive(false);
+                for (int y = 0; y < World.worldWidth; y++)
+                {
+                    for (int x = 0; x < World.worldHeight; x++)
+                    {
+                        tileObjects[x, y, layer].GetComponent<SpriteRenderer>().enabled = false;
+                    }
+                }
             }
+            else if (layer < currentZLevel)
+            {
+                if(currentZLevel - layer > 3)
+                {
+                    for (int y = 0; y < World.worldWidth; y++)
+                    {
+                        for (int x = 0; x < World.worldHeight; x++)
+                        {
+                            tileObjects[x, y, layer].GetComponent<SpriteRenderer>().enabled = false;
+                        }
+                    }
+                }
+                else if (currentZLevel - layer <= 3)
+                {
+
+                    for (int y = 0; y < World.worldWidth; y++)
+                    {
+                        for (int x = 0; x < World.worldHeight; x++)
+                        {
+                            sprite = tileObjects[x, y, layer].GetComponent<SpriteRenderer>();
+
+                            if (!sprite.enabled)
+                            {
+                                sprite.enabled = true;
+                            }
+
+                            color = sprite.color;
+
+                            if (currentZLevel > previousZLevel)
+                            {
+                                color.a = Mathf.Max(0, color.a / 2);
+                            }
+                            else if (currentZLevel < previousZLevel)
+                            {
+                                color.a = Mathf.Min(255, color.a * 2);
+                            }
+
+                            sprite.color = color;
+                        }
+                    }
+                }
+                
+                
+                //else if (currentZLevel > layer)
+                //{
+                //    for (int y = 0; y < World.worldWidth; y++)
+                //    {
+                //        for (int x = 0; x < World.worldHeight; x++)
+                //        {
+                //            SpriteRenderer sprite = tileObjects[x, y, layer].GetComponent<SpriteRenderer>();
+
+                //            Color color = sprite.color;
+                //            color.a /= 2;
+
+                //            sprite.color = color;
+                //        }
+                //    }
+                //}
+                //else if (currentZLevel < previousZLevel)
+                //{
+                //    for (int y = 0; y < World.worldWidth; y++)
+                //    {
+                //        for (int x = 0; x < World.worldHeight; x++)
+                //        {
+                //            SpriteRenderer sprite = tileObjects[x, y, layer].GetComponent<SpriteRenderer>();
+
+                //            Color color = sprite.color;
+                //            color.a *= 2;
+
+                //            sprite.color = color;
+                //        }
+                //    }
+                //}
+
+            }
+            //else
+            //{
+            //    layers[layer].SetActive(false);
+            //}
         }
     }
 }

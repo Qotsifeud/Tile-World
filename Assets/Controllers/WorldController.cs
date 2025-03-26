@@ -54,9 +54,11 @@ public class WorldController : MonoBehaviour
     public Sprite oakTreeLog;
 
     public WorldMap World { get; protected set; }
-
+    
+    // Arrays for various things.
     public GameObject[] layers;
     public GameObject[,,] tileObjects;
+    public GameObject[,,] installedObjects;
 
     public int currentZLevel = 0;
 
@@ -117,6 +119,7 @@ public class WorldController : MonoBehaviour
                     GameObject tileObject = tileObjects[x, y, z];
 
                     OnTileChange(tileData, tileObject);
+                    TreeCreation(tileData, tileObject);
                 }
             }
         }
@@ -177,15 +180,15 @@ public class WorldController : MonoBehaviour
                     {
                         hasDirtAbove = true;
                     }
-                    else if(neighbour == Vector3Int.left && neighbourTile.Type == Tile.TileType.Dirt)
+                    else if (neighbour == Vector3Int.left && neighbourTile.Type == Tile.TileType.Dirt)
                     {
                         hasDirtLeft = true;
                     }
-                    else if(neighbour == Vector3Int.right && neighbourTile.Type == Tile.TileType.Dirt)
+                    else if (neighbour == Vector3Int.right && neighbourTile.Type == Tile.TileType.Dirt)
                     {
                         hasDirtRight = true;
                     }
-                    else if(neighbour == Vector3Int.down && neighbourTile.Type == Tile.TileType.Dirt)
+                    else if (neighbour == Vector3Int.down && neighbourTile.Type == Tile.TileType.Dirt)
                     {
                         hasDirtBelow = true;
                     }
@@ -249,12 +252,20 @@ public class WorldController : MonoBehaviour
                         spriteRenderer.sprite = leftGrass;
                         return;
                     }
-                    
+
                 }
-                else if (hasDirtRight && hasDirtAbove && hasDirtBelow)
+                else if (hasDirtRight && !hasDirtLeft)
                 {
-                    spriteRenderer.sprite = rightIsolatedGrass;
-                    return;
+                    if (hasDirtAbove && hasDirtBelow)
+                    {
+                        spriteRenderer.sprite = rightIsolatedGrass;
+                        return;
+                    }
+                    else
+                    {
+                        spriteRenderer.sprite = rightGrass;
+                        return;
+                    }
                 }
                 else
                 {
@@ -262,10 +273,23 @@ public class WorldController : MonoBehaviour
                     spriteRenderer.sprite = grassSprite;
                     return;
                 }
+            
+        }
+    }
 
-            case Tile.TileType.Tree:
-                spriteRenderer.sprite = oakTreeLog;
-                return;
+    public void TreeCreation(Tile tileData, GameObject tile)
+    {
+        if (tileData.hasTreeOn)
+        {
+            InstalledObject tree = new InstalledObject();
+            tree.Type = InstalledObject.ObjectType.Tree;
+
+            GameObject treeObject = new GameObject();
+            treeObject.transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z + 0.1f);
+            treeObject.name = "Tree_" + tile.transform.position.x + "_" + tile.transform.position.y + "_" + tile.transform.position.z;
+            treeObject.AddComponent<SpriteRenderer>().sprite = oakTreeLog;
+
+            treeObject.transform.parent = tile.transform;
         }
     }
 

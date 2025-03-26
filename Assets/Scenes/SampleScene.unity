@@ -418,7 +418,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55016eb19334a4942ba17f5ddedf5295, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  noiseScale: 0.2
+  noiseScale: 0.3
   dirtThreshold: 0.6
   treeThreshold: 0.3
   treeProximity: 5

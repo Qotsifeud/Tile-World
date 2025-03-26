@@ -17,6 +17,8 @@ public class Tile
 
     TileType type = TileType.Empty;
 
+    public bool hasTreeOn;
+
     Action<Tile> cbTileChanged;
 
     public TileType Type
@@ -32,7 +34,7 @@ public class Tile
     }
 
     LooseObject looseObject;
-    InstalledObject installedObject;
+    public InstalledObject installedObject;
 
     WorldMap world;
     public int x { get; set; }

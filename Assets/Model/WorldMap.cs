@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -32,9 +33,13 @@ public class WorldMap
 
         Debug.Log("World created with " + (worldWidth *  worldHeight * worldZLevels) + " tiles.");
     }
-    
+
     public void RandomizeTiles(float noiseScale, float dirtThreshold)
     {
+        // Generate random offsets for Perlin noise
+        float offsetX = UnityEngine.Random.Range(0f, 10000f);
+        float offsetY = UnityEngine.Random.Range(0f, 10000f);
+
         for (int z = 0; z < worldZLevels; z++)
         {
             for (int x = 0; x < worldWidth; x++)
@@ -44,10 +49,10 @@ public class WorldMap
                     if (z > 0)
                     {
                         tiles[x, y, z].Type = Tile.TileType.Empty;
-                        return;
+                        continue;
                     }
 
-                    float noiseValue = Mathf.PerlinNoise(x * noiseScale, y * noiseScale);
+                    float noiseValue = Mathf.PerlinNoise((x * noiseScale) + offsetX, (y * noiseScale) + offsetY);
 
                     if (noiseValue < dirtThreshold)
                     {
@@ -65,6 +70,7 @@ public class WorldMap
     public void RandomizeTrees(float noiseScale, float treeThreshold, int treeProximity)
     {
         int layer = 0;
+        int treeCount = 0;
 
         for (int x = 0; x < worldWidth; x++)
         {
@@ -81,7 +87,7 @@ public class WorldMap
                         bool hasTreeInProximity = false;
                         foreach (Tile tile in proxTiles)
                         {
-                            if (tile.Type == Tile.TileType.Tree)
+                            if (tile.hasTreeOn)
                             {
                                 hasTreeInProximity = true;
                                 break;
@@ -97,15 +103,14 @@ public class WorldMap
 
                         if (noiseValue < treeThreshold)
                         {
-                            tiles[x, y, layer].Type = Tile.TileType.Tree;
+                            //tiles[x, y, layer].installedObject.Type = InstalledObject.ObjectType.Tree;
+                            tiles[x, y, layer].hasTreeOn = true;
                         }
 
                         break;
                 }
             }
         }
-
-        int treeCount = 0;
 
         for (int z = 0; z < worldZLevels; z++)
         {
@@ -115,18 +120,20 @@ public class WorldMap
                 {
                     Tile tile = GetTile(x, y, z);
 
-                    if (tile.Type == Tile.TileType.Tree)
+                    if (tile.hasTreeOn)
                     {
-                        for (int tH = 0; tH < 3; tH++) // th = tree height
-                        {
-                            if (z + tH >= worldZLevels) { break; } // Ensure we don't go out of bounds
+                        //for (int tH = 0; tH < 3; tH++) // th = tree height
+                        //{
+                        //    if (z + tH >= worldZLevels) { break; } // Ensure we don't go out of bounds
 
-                            tile = GetTile(x, y, z + tH);
+                        //    tile = GetTile(x, y, z + tH);
 
-                            tile.Type = Tile.TileType.Tree;
+                        //    tile.Type = Tile.TileType.Tree;
 
-                            treeCount += 1;
-                        }
+                        //    treeCount += 1;
+                        //}
+
+                        treeCount += 1;
                     }
                 }
             }

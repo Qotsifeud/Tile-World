@@ -87,7 +87,7 @@ public class WorldMap
                         bool hasTreeInProximity = false;
                         foreach (Tile tile in proxTiles)
                         {
-                            if (tile.hasTreeOn)
+                            if (tile.installedObject != null && tile.installedObject.Type == InstalledObject.ObjectType.Tree)
                             {
                                 hasTreeInProximity = true;
                                 break;
@@ -104,7 +104,11 @@ public class WorldMap
                         if (noiseValue < treeThreshold)
                         {
                             //tiles[x, y, layer].installedObject.Type = InstalledObject.ObjectType.Tree;
-                            tiles[x, y, layer].hasTreeOn = true;
+                            InstalledObject tree = new InstalledObject(this, x, y, layer);
+
+                            tree.Type = InstalledObject.ObjectType.Tree;
+
+                            tiles[x, y, layer].installedObject = tree;
                         }
 
                         break;
@@ -120,19 +124,8 @@ public class WorldMap
                 {
                     Tile tile = GetTile(x, y, z);
 
-                    if (tile.hasTreeOn)
+                    if(tile.installedObject != null && tile.installedObject.Type == InstalledObject.ObjectType.Tree)
                     {
-                        //for (int tH = 0; tH < 3; tH++) // th = tree height
-                        //{
-                        //    if (z + tH >= worldZLevels) { break; } // Ensure we don't go out of bounds
-
-                        //    tile = GetTile(x, y, z + tH);
-
-                        //    tile.Type = Tile.TileType.Tree;
-
-                        //    treeCount += 1;
-                        //}
-
                         treeCount += 1;
                     }
                 }

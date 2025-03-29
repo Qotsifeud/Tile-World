@@ -19,4 +19,18 @@ public class InstalledObject
         get { return type; }
         set { type = value; }
     }
+
+    WorldMap world;
+
+    public int x { get; set; }
+    public int y { get; set; }
+    public int z { get; set; }
+
+    public InstalledObject(WorldMap world, int x, int y, int z)
+    {
+        this.world = world;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
 }

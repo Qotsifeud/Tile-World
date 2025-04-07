@@ -419,8 +419,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   noiseScale: 0.3
-  dirtThreshold: 0.6
-  treeThreshold: 0.3
+  dirtThreshold: 0.5
+  treeThreshold: 0
   treeProximity: 5
   air: {fileID: 21300000, guid: b98b77f6b58c38d4d85f6b5910f8e105, type: 3}
   dirtSprite: {fileID: 21300000, guid: 8e5bb39317a7205468b5eb96cd55fd7b, type: 3}

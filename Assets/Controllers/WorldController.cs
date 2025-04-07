@@ -5,7 +5,6 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class WorldController : MonoBehaviour
 {
@@ -61,7 +60,7 @@ public class WorldController : MonoBehaviour
     // Arrays for various things.
     public GameObject[] layers;
     public GameObject[,,] tileObjects;
-    public Dictionary<InstalledObject, GameObject> installedObjects = new Dictionary<InstalledObject, GameObject>();
+    public Dictionary<Tile, GameObject> installedObjects = new Dictionary<Tile, GameObject>();
 
     public int currentZLevel = 0;
 
@@ -297,7 +296,10 @@ public class WorldController : MonoBehaviour
 
                     treeObject.transform.parent = tileObjects[(int)tile.transform.position.x, (int)tile.transform.position.y, (int)tile.transform.position.z + i].transform;
 
-                    installedObjects.Add(tileData.installedObject, treeObject);
+                    if (!installedObjects.ContainsKey(tileData))
+                    {
+                        installedObjects.Add(tileData, treeObject);
+                    }
                 }
             }
         }
@@ -326,6 +328,11 @@ public class WorldController : MonoBehaviour
         }
         else
         {
+            if ((currentZLevel + 1) > World.worldHeight - 1)
+            {
+                Debug.Log("Cannot exceed world height.");
+                return;
+            }
             currentZLevel += 1;
             Debug.Log("current z level is " + currentZLevel);
         }
@@ -344,6 +351,7 @@ public class WorldController : MonoBehaviour
                     for (int x = 0; x < World.worldHeight; x++)
                     {
                         SpriteRenderer tileSprite = GetTileSpriteRenderer(x, y, layer);
+                        SpriteRenderer treeSprite = null;
                         tileSprite.enabled = true;
 
                         Color color = tileSprite.color;
@@ -351,7 +359,10 @@ public class WorldController : MonoBehaviour
 
                         tileSprite.color = color;
 
-                        SpriteRenderer treeSprite = GetObjSpriteRenderer(x, y, layer, World.GetTile(x, y, layer).installedObject);
+                        if(World.GetTile(x, y, layer).installedObject != null)
+                        {
+                            treeSprite = GetObjSpriteRenderer(x, y, layer, World.GetTile(x, y, layer));
+                        }
 
                         if (treeSprite != null)
                         {
@@ -371,7 +382,10 @@ public class WorldController : MonoBehaviour
                     {
                         GetTileSpriteRenderer(x, y, layer).enabled = false;
 
-                        GetObjSpriteRenderer(x, y, layer, World.GetTile(x, y, layer).installedObject).enabled = false;
+                        if (World.GetTile(x, y, layer).installedObject != null)
+                        {
+                            GetObjSpriteRenderer(x, y, layer, World.GetTile(x, y, layer)).enabled = false;
+                        }
                     }
                 }
             }
@@ -386,9 +400,9 @@ public class WorldController : MonoBehaviour
                             GetTileSpriteRenderer(x, y, layer).enabled = false;
 
 
-                            InstalledObject temp = World.GetTile(x, y, layer).installedObject;
+                            Tile temp = World.GetTile(x, y, layer);
 
-                            if (temp != null)
+                            if (temp != null && temp.installedObject != null)
                             {
                                 GetObjSpriteRenderer(x, y, layer, temp).enabled = false;
                             }
@@ -404,15 +418,18 @@ public class WorldController : MonoBehaviour
                             SpriteRenderer tileSprite = GetTileSpriteRenderer(x, y, layer);
                             SpriteRenderer treeSprite = new SpriteRenderer();
 
-                            InstalledObject temp = World.GetTile(x, y, layer).installedObject;
+                            Tile temp = World.GetTile(x, y, layer);
 
-                            if (temp != null && temp.Type == InstalledObject.ObjectType.Tree)
+                            if (temp != null && temp.installedObject != null)
                             {
-                                treeSprite = GetObjSpriteRenderer(x, y, layer, temp);
-
-                                if (!treeSprite.enabled)
+                                if (temp.installedObject.Type == InstalledObject.ObjectType.Tree)
                                 {
-                                    treeSprite.enabled = true;
+                                    treeSprite = GetObjSpriteRenderer(x, y, layer, temp);
+
+                                    if (!treeSprite.enabled)
+                                    {
+                                        treeSprite.enabled = true;
+                                    }
                                 }
                             }
 
@@ -433,7 +450,11 @@ public class WorldController : MonoBehaviour
                                 color.a = Mathf.Min(1, color.a * 2f);
                             }
 
-                            treeSprite.color = color;
+                            if(treeSprite != null)
+                            {
+                                treeSprite.color = color;
+                            }
+
                             tileSprite.color = color;
                         }
                     }
@@ -447,7 +468,7 @@ public class WorldController : MonoBehaviour
         return tileObjects[x, y, z].GetComponent<SpriteRenderer>();
     }
 
-    public SpriteRenderer GetObjSpriteRenderer(int x, int y, int z, InstalledObject obj)
+    public SpriteRenderer GetObjSpriteRenderer(int x, int y, int z, Tile obj)
     {
         return installedObjects[obj].GetComponent<SpriteRenderer>();
     }

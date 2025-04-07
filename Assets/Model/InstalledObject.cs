@@ -8,6 +8,7 @@ public class InstalledObject
     {
         None,
         Tree,
+        Bush,
         Wall,
         Floor
     }

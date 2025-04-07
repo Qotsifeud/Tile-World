@@ -420,8 +420,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   noiseScale: 0.3
   dirtThreshold: 0.5
-  treeThreshold: 0
-  treeProximity: 5
+  treeThreshold: 0.6
+  bushThreshold: 0.1
+  vegetationProximity: 2
   air: {fileID: 21300000, guid: b98b77f6b58c38d4d85f6b5910f8e105, type: 3}
   dirtSprite: {fileID: 21300000, guid: 8e5bb39317a7205468b5eb96cd55fd7b, type: 3}
   grassSprite: {fileID: 21300000, guid: a254a51ad2a3b4547b0d8a39b9cd50ab, type: 3}
@@ -438,6 +439,7 @@ MonoBehaviour:
   leftBottomCornerCrass: {fileID: 21300000, guid: eaa0030f0e52e7b488490939e45405e8, type: 3}
   rightBottomCornerCrass: {fileID: 21300000, guid: 35fa8678cf949f6468b0b0a5b28e0c32, type: 3}
   oakTreeLog: {fileID: 21300000, guid: 24168863ebeda7e4da9d3fd8a5952fd9, type: 3}
+  berryBush: {fileID: 21300000, guid: b53e1582713886a4e8c987df53f899c2, type: 3}
   layers: []
   currentZLevel: 0
 --- !u!4 &368680818
@@ -737,7 +739,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1210733441}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 52.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

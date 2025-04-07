@@ -7,6 +7,7 @@ public class Tile
 {
     public enum TileType
     {
+        Water,
         Dirt,
         Grass,
         Tree,

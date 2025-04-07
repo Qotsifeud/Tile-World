@@ -54,6 +54,7 @@ public class MouseController : MonoBehaviour
 
     void UpdateCamera()
     {
+
         if (Input.GetMouseButton(1) || Input.GetMouseButton(2))
         {
             Vector3 diff = previousFramePosition - currentFramePos; // Original direction

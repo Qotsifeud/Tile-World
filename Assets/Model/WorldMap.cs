@@ -5,6 +5,18 @@ using UnityEngine;
 
 public class WorldMap
 {
+    private readonly Vector3Int[] neighbourPositions =
+    {
+        Vector3Int.up, // N
+        Vector3Int.left, // W
+        Vector3Int.right, // E
+        Vector3Int.down, // S
+        Vector3Int.up + Vector3Int.right, // NE
+        Vector3Int.up + Vector3Int.left, // NW
+        Vector3Int.down + Vector3Int.right, // SE
+        Vector3Int.down + Vector3Int.left // SW
+    };
+
     Tile[,,] tiles;
     public int worldWidth { get; private set; }
     public int worldHeight { get; private set; }
@@ -34,7 +46,7 @@ public class WorldMap
         Debug.Log("World created with " + (worldWidth *  worldHeight * worldZLevels) + " tiles.");
     }
 
-    public void RandomizeTiles(float noiseScale, float dirtThreshold)
+    public void RandomizeTiles(float noiseScale, float dirtThreshold, float waterThreshold)
     {
         // Generate random offsets for Perlin noise
         float offsetX = UnityEngine.Random.Range(0f, 10000f);
@@ -67,7 +79,7 @@ public class WorldMap
         }
     }
 
-    public void RandomizeTrees(float noiseScale, float treeThreshold, int treeProximity)
+    public void RandomizeVegetation(float noiseScale, float treeThreshold, float bushThreshold, int vegProximity)
     {
         int layer = 0;
         int treeCount = 0;
@@ -82,26 +94,30 @@ public class WorldMap
                         continue;
                     case Tile.TileType.Grass:
 
-                        List<Tile> proxTiles = GetTilesInProximity(x, y, layer, treeProximity);
+                        List<Tile> proxTiles = GetTilesInProximity(x, y, layer, vegProximity);
 
-                        bool hasTreeInProximity = false;
+                        bool hasVegInProximity = false;
+
                         foreach (Tile tile in proxTiles)
                         {
-                            if (tile.installedObject != null && tile.installedObject.Type == InstalledObject.ObjectType.Tree)
+                            if (tile.installedObject != null)
                             {
-                                hasTreeInProximity = true;
-                                break;
+                                if (tile.installedObject.Type == InstalledObject.ObjectType.Tree || tile.installedObject.Type == InstalledObject.ObjectType.Bush)
+                                { 
+                                    hasVegInProximity = true;
+                                    break;
+                                }
                             }
                         }
 
-                        if (hasTreeInProximity)
+                        if (hasVegInProximity)
                         {
                             continue; // Skip to the next tile
                         }
 
                         float noiseValue = Mathf.PerlinNoise(x * noiseScale, y * noiseScale);
 
-                        if (noiseValue < treeThreshold)
+                        if (noiseValue < treeThreshold && noiseValue > bushThreshold)
                         {
                             //tiles[x, y, layer].installedObject.Type = InstalledObject.ObjectType.Tree;
                             InstalledObject tree = new InstalledObject(this, x, y, layer);
@@ -109,6 +125,14 @@ public class WorldMap
                             tree.Type = InstalledObject.ObjectType.Tree;
 
                             tiles[x, y, layer].installedObject = tree;
+                        }
+                        else if (noiseValue < bushThreshold)
+                        {
+                            InstalledObject bush = new InstalledObject(this, x, y, layer);
+
+                            bush.Type = InstalledObject.ObjectType.Bush;
+
+                            tiles[x, y, layer].installedObject = bush;
                         }
 
                         break;
@@ -133,6 +157,11 @@ public class WorldMap
         }
 
         Debug.Log("There are " + treeCount + " trees");
+    }
+
+    public void CreateWaterBodies(float waterThreshold, float noiseScale)
+    {
+
     }
 
     public Tile GetTile(int x, int y)

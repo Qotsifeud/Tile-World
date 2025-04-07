@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TreeEditor;
+using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -10,16 +12,14 @@ public class WorldController : MonoBehaviour
 {
     private readonly Vector3Int[] neighbourPositions =
     {
-        Vector3Int.up,
-        Vector3Int.left,
-        Vector3Int.right,
-        Vector3Int.down
-    
-        // if you also wanted to get diagonal neighbours
-        //Vector3Int.up + Vector3Int.right,
-        //Vector3Int.up + Vector3Int.left,
-        //Vector3Int.down + Vector3Int.right,
-        //Vector3Int.down + Vector3Int.left
+        Vector3Int.up, // N
+        Vector3Int.left, // W
+        Vector3Int.right, // E
+        Vector3Int.down, // S
+        Vector3Int.up + Vector3Int.right, // NE
+        Vector3Int.up + Vector3Int.left, // NW
+        Vector3Int.down + Vector3Int.right, // SE
+        Vector3Int.down + Vector3Int.left // SW
     };
 
     public static WorldController Instance
@@ -31,7 +31,9 @@ public class WorldController : MonoBehaviour
     public float noiseScale;
     public float dirtThreshold;
     public float treeThreshold;
-    public int treeProximity;
+    public float bushThreshold;
+    public float waterThreshold;
+    public int vegetationProximity;
 
     [Header("Testing Sprites")]
     public Sprite air;
@@ -54,6 +56,10 @@ public class WorldController : MonoBehaviour
 
     [Header("Plant Sprites")]
     public Sprite oakTreeLog;
+    public Sprite berryBush;
+
+    [Header("Water Sprites")]
+    public Sprite basicWater;
 
     public WorldMap World { get; protected set; }
     
@@ -106,8 +112,8 @@ public class WorldController : MonoBehaviour
             }
         }
 
-        World.RandomizeTiles(noiseScale, dirtThreshold);
-        World.RandomizeTrees(noiseScale, treeThreshold, treeProximity);
+        World.RandomizeTiles(noiseScale, dirtThreshold, waterThreshold);
+        World.RandomizeVegetation(noiseScale, treeThreshold, bushThreshold, vegetationProximity);
 
 
         for (int z = 0; z < World.worldZLevels; z++)
@@ -121,7 +127,7 @@ public class WorldController : MonoBehaviour
                     GameObject tileObject = tileObjects[x, y, z];
 
                     OnTileChange(tileData, tileObject);
-                    TreeCreation(tileData, tileObject);
+                    VegetationCreation(tileData, tileObject);
                 }
             }
         }
@@ -159,6 +165,10 @@ public class WorldController : MonoBehaviour
 
             case Tile.TileType.Dirt:
                 spriteRenderer.sprite = dirtSprite;
+                return;
+
+            case Tile.TileType.Water:
+                spriteRenderer.sprite = basicWater;
                 return;
 
             case Tile.TileType.Grass:
@@ -279,7 +289,7 @@ public class WorldController : MonoBehaviour
         }
     }
 
-    public void TreeCreation(Tile tileData, GameObject tile)
+    public void VegetationCreation(Tile tileData, GameObject tile)
     {
         int treeHeight = 2;
 
@@ -290,8 +300,8 @@ public class WorldController : MonoBehaviour
                 for (int i = 0; i <= treeHeight; i++)
                 {
                     GameObject treeObject = new GameObject();
-                    treeObject.transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z + i);
-                    treeObject.name = "Tree_" + tile.transform.position.x + "_" + tile.transform.position.y + "_" + tile.transform.position.z + i;
+                    treeObject.transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, (tile.transform.position.z + i));
+                    treeObject.name = "Tree_" + tile.transform.position.x + "_" + tile.transform.position.y + "_" + (tile.transform.position.z + i);
                     treeObject.AddComponent<SpriteRenderer>().sprite = oakTreeLog;
 
                     treeObject.transform.parent = tileObjects[(int)tile.transform.position.x, (int)tile.transform.position.y, (int)tile.transform.position.z + i].transform;
@@ -300,6 +310,24 @@ public class WorldController : MonoBehaviour
                     {
                         installedObjects.Add(tileData, treeObject);
                     }
+                }
+            }
+            else if (tileData.installedObject.Type == InstalledObject.ObjectType.Bush)
+            {
+                GameObject bushObject = new GameObject();
+                bushObject.transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z + 0.1f);
+                bushObject.name = "Bush_" + tile.transform.position.x + "_" + tile.transform.position.y + "_" + tile.transform.position.z;
+                bushObject.AddComponent<SpriteRenderer>().sprite = berryBush;
+
+                bushObject.transform.parent = tileObjects[(int)tile.transform.position.x, (int)tile.transform.position.y, (int)tile.transform.position.z].transform;
+
+                UnityEngine.Random.InitState(DateTime.Now.Millisecond); 
+
+                bushObject.transform.rotation = new Quaternion(UnityEngine.Random.rotation.x, 0, 0, 0);
+
+                if (!installedObjects.ContainsKey(tileData))
+                {
+                    installedObjects.Add(tileData, bushObject);
                 }
             }
         }
@@ -416,7 +444,7 @@ public class WorldController : MonoBehaviour
                         for (int x = 0; x < World.worldHeight; x++)
                         {
                             SpriteRenderer tileSprite = GetTileSpriteRenderer(x, y, layer);
-                            SpriteRenderer treeSprite = new SpriteRenderer();
+                            SpriteRenderer installedOnTile = new SpriteRenderer();
 
                             Tile temp = World.GetTile(x, y, layer);
 
@@ -424,11 +452,11 @@ public class WorldController : MonoBehaviour
                             {
                                 if (temp.installedObject.Type == InstalledObject.ObjectType.Tree)
                                 {
-                                    treeSprite = GetObjSpriteRenderer(x, y, layer, temp);
+                                    installedOnTile = GetObjSpriteRenderer(x, y, layer, temp);
 
-                                    if (!treeSprite.enabled)
+                                    if (!installedOnTile.enabled)
                                     {
-                                        treeSprite.enabled = true;
+                                        installedOnTile.enabled = true;
                                     }
                                 }
                             }
@@ -450,9 +478,9 @@ public class WorldController : MonoBehaviour
                                 color.a = Mathf.Min(1, color.a * 2f);
                             }
 
-                            if(treeSprite != null)
+                            if(installedOnTile != null)
                             {
-                                treeSprite.color = color;
+                                installedOnTile.color = color;
                             }
 
                             tileSprite.color = color;

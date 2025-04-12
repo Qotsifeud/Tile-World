@@ -450,14 +450,11 @@ public class WorldController : MonoBehaviour
 
                             if (temp != null && temp.installedObject != null)
                             {
-                                if (temp.installedObject.Type == InstalledObject.ObjectType.Tree)
-                                {
-                                    installedOnTile = GetObjSpriteRenderer(x, y, layer, temp);
+                                installedOnTile = GetObjSpriteRenderer(x, y, layer, temp);
 
-                                    if (!installedOnTile.enabled)
-                                    {
-                                        installedOnTile.enabled = true;
-                                    }
+                                if (!installedOnTile.enabled)
+                                {
+                                    installedOnTile.enabled = true;
                                 }
                             }
 

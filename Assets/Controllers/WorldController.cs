@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using TreeEditor;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -31,9 +30,10 @@ public class WorldController : MonoBehaviour
     public float noiseScale;
     public float dirtThreshold;
     public float treeThreshold;
+    public int treeHeight;
     public float bushThreshold;
-    public float waterThreshold;
     public int vegetationProximity;
+    public int waterThreshold;
 
     [Header("Testing Sprites")]
     public Sprite air;
@@ -55,7 +55,9 @@ public class WorldController : MonoBehaviour
     public Sprite rightBottomCornerCrass;
 
     [Header("Plant Sprites")]
+    public Sprite oakTreeStump;
     public Sprite oakTreeLog;
+    public Sprite oakTreeLeaves;
     public Sprite berryBush;
 
     [Header("Water Sprites")]
@@ -67,6 +69,7 @@ public class WorldController : MonoBehaviour
     public GameObject[] layers;
     public GameObject[,,] tileObjects;
     public Dictionary<Tile, GameObject> installedObjects = new Dictionary<Tile, GameObject>();
+    public List<Tile> river;
 
     public int currentZLevel = 0;
 
@@ -113,7 +116,8 @@ public class WorldController : MonoBehaviour
         }
 
         World.RandomizeTiles(noiseScale, dirtThreshold, waterThreshold);
-        World.RandomizeVegetation(noiseScale, treeThreshold, bushThreshold, vegetationProximity);
+        World.CreateWater();
+        World.RandomizeVegetation(noiseScale, treeThreshold, bushThreshold, treeHeight);
 
 
         for (int z = 0; z < World.worldZLevels; z++)
@@ -145,6 +149,9 @@ public class WorldController : MonoBehaviour
                 }
             }
         }
+
+        currentZLevel = 0;
+        ChangeZLayer(0);
     }
 
     // Update is called once per frame
@@ -291,25 +298,46 @@ public class WorldController : MonoBehaviour
 
     public void VegetationCreation(Tile tileData, GameObject tile)
     {
-        int treeHeight = 2;
-
         if (tileData.installedObject != null)
         {
             if (tileData.installedObject.Type == InstalledObject.ObjectType.Tree)
             {
-                for (int i = 0; i <= treeHeight; i++)
+                GameObject treeObject = new GameObject();
+                treeObject.transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z);
+                treeObject.name = "Tree_" + tile.transform.position.x + "_" + tile.transform.position.y + "_" + tile.transform.position.z;
+
+                if (tile.transform.position.z == 0)
                 {
-                    GameObject treeObject = new GameObject();
-                    treeObject.transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, (tile.transform.position.z + i));
-                    treeObject.name = "Tree_" + tile.transform.position.x + "_" + tile.transform.position.y + "_" + (tile.transform.position.z + i);
+                    treeObject.transform.position = new Vector3(treeObject.transform.position.x, treeObject.transform.position.y, treeObject.transform.position.z + 0.5f);
+                    treeObject.AddComponent<SpriteRenderer>().sprite = oakTreeStump;
+                }
+                else
+                {
                     treeObject.AddComponent<SpriteRenderer>().sprite = oakTreeLog;
+                }
 
-                    treeObject.transform.parent = tileObjects[(int)tile.transform.position.x, (int)tile.transform.position.y, (int)tile.transform.position.z + i].transform;
+                treeObject.transform.parent = tileObjects[(int)tile.transform.position.x, (int)tile.transform.position.y, (int)tile.transform.position.z].transform;
+                    
 
-                    if (!installedObjects.ContainsKey(tileData))
-                    {
-                        installedObjects.Add(tileData, treeObject);
-                    }
+                if (!installedObjects.ContainsKey(tileData))
+                {
+                    installedObjects.Add(tileData, treeObject);
+                }
+            }
+            else if(tileData.installedObject.Type == InstalledObject.ObjectType.Leaves)
+            {
+                GameObject leafObject = new GameObject();
+                leafObject.transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, (tile.transform.position.z));
+                leafObject.name = "TreeLeaf_" + tile.transform.position.x + "_" + tile.transform.position.y + "_" + (tile.transform.position.z);
+
+                leafObject.AddComponent<SpriteRenderer>().sprite = oakTreeLeaves; 
+
+                leafObject.transform.parent = tileObjects[(int)tile.transform.position.x, (int)tile.transform.position.y, (int)tile.transform.position.z].transform;
+                    
+
+                if (!installedObjects.ContainsKey(tileData))
+                {
+                    installedObjects.Add(tileData, leafObject);
                 }
             }
             else if (tileData.installedObject.Type == InstalledObject.ObjectType.Bush)
@@ -321,9 +349,7 @@ public class WorldController : MonoBehaviour
 
                 bushObject.transform.parent = tileObjects[(int)tile.transform.position.x, (int)tile.transform.position.y, (int)tile.transform.position.z].transform;
 
-                UnityEngine.Random.InitState(DateTime.Now.Millisecond); 
-
-                bushObject.transform.rotation = new Quaternion(UnityEngine.Random.rotation.x, 0, 0, 0);
+                UnityEngine.Random.InitState(DateTime.Now.Millisecond);
 
                 if (!installedObjects.ContainsKey(tileData))
                 {
@@ -419,7 +445,7 @@ public class WorldController : MonoBehaviour
             }
             else if (layer < currentZLevel)
             {
-                if (currentZLevel - layer > 3)
+                if (currentZLevel - layer > 5)
                 {
                     for (int y = 0; y < World.worldWidth; y++)
                     {

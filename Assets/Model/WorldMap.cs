@@ -1,20 +1,22 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class WorldMap
 {
-    private readonly Vector3Int[] neighbourPositions =
+    public readonly Vector2Int[] neighbourPositions =
     {
-        Vector3Int.up, // N
-        Vector3Int.left, // W
-        Vector3Int.right, // E
-        Vector3Int.down, // S
-        Vector3Int.up + Vector3Int.right, // NE
-        Vector3Int.up + Vector3Int.left, // NW
-        Vector3Int.down + Vector3Int.right, // SE
-        Vector3Int.down + Vector3Int.left // SW
+        Vector2Int.up, // N
+        Vector2Int.left, // W
+        Vector2Int.right, // E
+        Vector2Int.down, // S
+        Vector2Int.up + Vector2Int.right, // NE
+        Vector2Int.up + Vector2Int.left, // NW
+        Vector2Int.down + Vector2Int.right, // SE
+        Vector2Int.down + Vector2Int.left // SW
     };
 
     Tile[,,] tiles;
@@ -22,7 +24,7 @@ public class WorldMap
     public int worldHeight { get; private set; }
     public int worldZLevels { get; private set; }
 
-    public WorldMap(int width = 100, int height = 100, int zLevels = 4)
+    public WorldMap(int width = 100, int height = 100, int zLevels = 5)
     {
         this.worldWidth = width;
         this.worldHeight = height;
@@ -79,10 +81,11 @@ public class WorldMap
         }
     }
 
-    public void RandomizeVegetation(float noiseScale, float treeThreshold, float bushThreshold, int vegProximity)
+    public void RandomizeVegetation(float noiseScale, float treeThreshold, float bushThreshold, int treeHeight)
     {
         int layer = 0;
         int treeCount = 0;
+        int vegProximity = 0;
 
         for (int x = 0; x < worldWidth; x++)
         {
@@ -93,6 +96,10 @@ public class WorldMap
                     case Tile.TileType.Dirt:
                         continue;
                     case Tile.TileType.Grass:
+
+                        UnityEngine.Random.InitState(DateTime.Now.Millisecond);
+
+                        vegProximity = UnityEngine.Random.Range(3, 10);
 
                         List<Tile> proxTiles = GetTilesInProximity(x, y, layer, vegProximity);
 
@@ -120,11 +127,36 @@ public class WorldMap
                         if (noiseValue < treeThreshold && noiseValue > bushThreshold)
                         {
                             //tiles[x, y, layer].installedObject.Type = InstalledObject.ObjectType.Tree;
-                            InstalledObject tree = new InstalledObject(this, x, y, layer);
+                            
+                            for (int i = 0; i <= treeHeight; i++)
+                            {
+                                InstalledObject tree = new InstalledObject(this, x, y, layer + i);
 
-                            tree.Type = InstalledObject.ObjectType.Tree;
+                                tree.Type = InstalledObject.ObjectType.Tree;
 
-                            tiles[x, y, layer].installedObject = tree;
+                                tiles[x, y, layer + i].installedObject = tree;
+                            }
+
+                            InstalledObject firstLeaf = new InstalledObject(this, x, y, treeHeight + 1);
+
+                            firstLeaf.Type = InstalledObject.ObjectType.Leaves;
+
+                            tiles[x, y, treeHeight + 1].installedObject = firstLeaf;
+
+                            foreach(var dir in neighbourPositions)
+                            {
+                                int leafDirX = x + dir.x;
+                                int leafDirY = y + dir.y;
+
+                                InstalledObject leaves = new InstalledObject(this, leafDirX, leafDirY, treeHeight + 1);
+
+                                leaves.Type = InstalledObject.ObjectType.Leaves;
+
+                                if (leafDirX >= 0 && leafDirX < worldWidth && leafDirY >= 0 && leafDirY < worldHeight)
+                                {
+                                    tiles[x + dir.x, y + dir.y, treeHeight + 1].installedObject = leaves;
+                                }
+                            }
                         }
                         else if (noiseValue < bushThreshold)
                         {
@@ -159,9 +191,39 @@ public class WorldMap
         Debug.Log("There are " + treeCount + " trees");
     }
 
-    public void CreateWaterBodies(float waterThreshold, float noiseScale)
+    public void CreateWater()
     {
+        AStar aStar = new AStar();
 
+        Random.InitState(DateTime.Now.Millisecond);
+
+        int sourceX = UnityEngine.Random.Range(0, worldWidth);
+        int sourceY = 99;
+
+        int endingX = UnityEngine.Random.Range(0, worldWidth);
+
+        List<Tile> river = aStar.AStarPath(GetTile(sourceX, sourceY, 0), GetTile(endingX, 0, 0), this);
+
+        if(river == null || river.Count == 0)
+        {
+            Debug.Log("No river path found.");
+            return;
+        }
+
+        foreach(Tile tile in river)
+        {
+            float perlinWidth = Mathf.PerlinNoise(tile.x * 0.2f, tile.y * 0.2f);
+            int width = Mathf.RoundToInt(Mathf.Lerp(1, 4, perlinWidth));
+
+            List<Tile> neighbouringTiles = GetTilesInProximity(tile.x, tile.y, 0, UnityEngine.Random.Range(0, 5));
+
+            tile.Type = Tile.TileType.Water;
+
+            foreach(Tile neighbour in neighbouringTiles)
+            {
+                neighbour.Type = Tile.TileType.Water;
+            }
+        }
     }
 
     public Tile GetTile(int x, int y)

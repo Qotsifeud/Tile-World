@@ -10,7 +10,6 @@ public class Tile
         Water,
         Dirt,
         Grass,
-        Tree,
         Stone,
         Empty,
         Floor

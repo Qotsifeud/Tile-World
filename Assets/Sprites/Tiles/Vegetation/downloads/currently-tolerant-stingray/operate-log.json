@@ -1,0 +1,21 @@
+{"level":30,"msg":"Queuing install for Raven Fantasy - 2D PixelArt Tileset and Sprites - Trees and Stumps - https://clockworkraven.itch.io/raven-fantasy-2d-pixelart-tileset-and-sprites-trees-and-stumps","name":"butler","time":1744721244330}
+{"level":30,"msg":"Generated fresh cave 913a767d-8d7a-45be-b361-1d1a12445e7c","name":"butler","time":1744721244330}
+{"level":30,"msg":"Upload specified:","name":"butler","time":1744721244330}
+{"level":30,"msg":"  ☁ raven-fantasy-2d-pixelart-tileset-and-1463029 :: Unknown size :: #13374109","name":"butler","time":1744721244330}
+{"level":30,"msg":"    Other :: No platforms","name":"butler","time":1744721244330}
+{"level":30,"msg":"Upload is not wharf-enabled","name":"butler","time":1744721244537}
+{"level":30,"msg":"→ Performing install for Raven Fantasy - 2D PixelArt Tileset and Sprites - Trees and Stumps - https://clockworkraven.itch.io/raven-fantasy-2d-pixelart-tileset-and-sprites-trees-and-stumps","name":"butler","time":1744721245001}
+{"level":30,"msg":"    to (C:\\Users\\jay14\\Documents\\GitHub\\Medieval-Colony-Game\\Assets\\Sprites\\Tiles\\Vegetation\\raven-fantasy-2d-pixelart-tileset-and-sprites-trees-and-stumps)","name":"butler","time":1744721245001}
+{"level":30,"msg":"    via (C:\\Users\\jay14\\Documents\\GitHub\\Medieval-Colony-Game\\Assets\\Sprites\\Tiles\\Vegetation\\downloads\\currently-tolerant-stingray)","name":"butler","time":1744721245001}
+{"level":20,"msg":"Locking (C:\\Users\\jay14\\Documents\\GitHub\\Medieval-Colony-Game\\Assets\\Sprites\\Tiles\\Vegetation\\raven-fantasy-2d-pixelart-tileset-and-sprites-trees-and-stumps\\.itch\\runlock.json) for install","name":"butler","time":1744721245001}
+{"level":30,"msg":"No receipt found.","name":"butler","time":1744721245003}
+{"level":30,"msg":"→ Starting fresh download session (5243ecf9-f83e-4fdf-8aa7-4638a56f858d)","name":"butler","time":1744721245201}
+{"level":30,"msg":"← No previous install info (no recorded upload or build)","name":"butler","time":1744721245201}
+{"level":30,"msg":"→ To be installed:","name":"butler","time":1744721245201}
+{"level":30,"msg":"  ☁ raven-fantasy-2d-pixelart-tileset-and-1463029 :: Unknown size :: #13374109","name":"butler","time":1744721245201}
+{"level":30,"msg":"    Other :: No platforms","name":"butler","time":1744721245201}
+{"level":30,"msg":"(opening file took 698.956ms)","name":"butler","time":1744721245900}
+{"level":40,"msg":"Dealing with an external upload (from www.patreon.com), all bets are off.","name":"butler","time":1744721245900}
+{"level":40,"msg":"Forcing download before we check anything else.","name":"butler","time":1744721245900}
+{"level":30,"msg":"⇓ Pre-allocating -1 B on disk","name":"butler","time":1744721245900}
+{"level":30,"msg":"↻ Resuming @ 0 B","name":"butler","time":1744721245902}
